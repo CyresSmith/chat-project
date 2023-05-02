@@ -1,24 +1,47 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import Header from './components/Header';
+import { io } from 'socket.io-client';
+
+import CreatingChatModal from './components/CreatingChatModal';
+
+import ChatsPanel from './components/ChatsPanel';
 
 function App() {
+  const [socket, setSocket] = useState(null);
+
+  const [chatsPanelOpen, setChatsPanelOpen] = useState(false);
+  const [creatingChatModalOpen, setCreatingChatModalOpen] = useState(false);
+
+  const toggleCreatingChatModal = () => {
+    setCreatingChatModalOpen(prev => !prev);
+  };
+
+  const toggleChatsPanel = () => {
+    setChatsPanelOpen(prev => !prev);
+  };
+
+  // useEffect(() => {
+  //   setSocket(io('http://localhost:4000'));
+  // }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Header
+        socket={socket}
+        toggleChatsPanel={toggleChatsPanel}
+        openCreatingChatModal={toggleCreatingChatModal}
+      />
+      <ChatsPanel
+        chatsPanelOpen={chatsPanelOpen}
+        toggleChatsPanel={toggleChatsPanel}
+      />
+      <CreatingChatModal
+        open={creatingChatModalOpen}
+        handleClose={toggleCreatingChatModal}
+      />
+      <Outlet context={{ socket }} />
+    </>
   );
 }
 
