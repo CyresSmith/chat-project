@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import {
   Box,
@@ -10,9 +11,15 @@ import {
   Typography,
 } from '@mui/material';
 
+import { getAuth } from 'redux/selectors';
+import { useNavigate } from 'react-router-dom';
+
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
-export default function UserMenu(params) {
+const UserMenu = params => {
+  const { user } = useSelector(getAuth);
+  const navigate = useNavigate();
+
   const [anchorElUser, setAnchorElUser] = useState(null);
 
   const handleOpenUserMenu = event => {
@@ -27,7 +34,7 @@ export default function UserMenu(params) {
     <Box sx={{ flexGrow: 0 }}>
       <Tooltip title="Open settings">
         <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-          <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+          <Avatar alt={user.name} src={user.avatarUrl} />
         </IconButton>
       </Tooltip>
       <Menu
@@ -46,12 +53,18 @@ export default function UserMenu(params) {
         open={Boolean(anchorElUser)}
         onClose={handleCloseUserMenu}
       >
-        {settings.map(setting => (
-          <MenuItem key={setting} onClick={handleCloseUserMenu}>
-            <Typography textAlign="center">{setting}</Typography>
-          </MenuItem>
-        ))}
+        <MenuItem
+          key="profile"
+          onClick={() => {
+            handleCloseUserMenu();
+            navigate('/profile');
+          }}
+        >
+          <Typography textAlign="center">Profile</Typography>
+        </MenuItem>
       </Menu>
     </Box>
   );
-}
+};
+
+export default UserMenu;

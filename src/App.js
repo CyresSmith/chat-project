@@ -1,48 +1,58 @@
-import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import Header from './components/Header';
-import { io } from 'socket.io-client';
+import { lazy, Suspense, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-import CreatingChatModal from './components/CreatingChatModal';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAuth } from 'redux/selectors';
 
-import ChatsPanel from './components/ChatsPanel';
+import { useGetCurrentUserQuery } from 'redux/userAPI';
+import { setAuthHeader } from 'redux/axiosBaseQuery';
+import { setUser } from 'redux/authSlice';
 
-function App() {
-  const [socket, setSocket] = useState(null);
+// import Spinner from './shared/Spinner';
+import SharedLayout from 'components/SharedLayout';
+import Profile from 'pages/Profile';
+// import HomePage from 'pages/HomePage';
 
-  const [chatsPanelOpen, setChatsPanelOpen] = useState(false);
-  const [creatingChatModalOpen, setCreatingChatModalOpen] = useState(false);
+// const ContactsPage = lazy(() => import('pages/ContactsPage'));
+// const NotFoundPage = lazy(() => import('pages/NotFoundPage'));
 
-  const toggleCreatingChatModal = () => {
-    setCreatingChatModalOpen(prev => !prev);
-  };
+const Spinner = () => {
+  return <div></div>;
+};
 
-  const toggleChatsPanel = () => {
-    setChatsPanelOpen(prev => !prev);
-  };
+const App = () => {
+  const dispatch = useDispatch();
+  const { token } = useSelector(getAuth);
 
-  // useEffect(() => {
-  //   setSocket(io('http://localhost:4000'));
-  // }, []);
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+    setAuthHeader(token);
+  }, [token]);
+
+  const { data, isLoading, isError, isFetching, isSuccess } =
+    useGetCurrentUserQuery(token, { skip: token === '' });
+
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch(setUser(data));
+    }
+  }, [data, dispatch, isSuccess]);
 
   return (
-    <>
-      <Header
-        socket={socket}
-        toggleChatsPanel={toggleChatsPanel}
-        openCreatingChatModal={toggleCreatingChatModal}
-      />
-      <ChatsPanel
-        chatsPanelOpen={chatsPanelOpen}
-        toggleChatsPanel={toggleChatsPanel}
-      />
-      <CreatingChatModal
-        open={creatingChatModalOpen}
-        handleClose={toggleCreatingChatModal}
-      />
-      <Outlet context={{ socket }} />
-    </>
+    <Suspense fallback={<Spinner />}>
+      {!isLoading && !isFetching && (
+        <Routes>
+          <Route path="/" element={<SharedLayout />}>
+            {/* <Route index element={<HomePage />} /> */}
+            <Route path="/profile" element={<Profile />} />
+            {/* <Route path="*" element={<NotFoundPage />} /> */}
+          </Route>
+        </Routes>
+      )}
+    </Suspense>
   );
-}
+};
 
 export default App;
